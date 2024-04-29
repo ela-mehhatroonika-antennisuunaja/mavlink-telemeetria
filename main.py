@@ -7,10 +7,12 @@ import serial
 import json
 import struct
 from pymavlink import mavutil
+
+TESTMODE = False
 HOME_LAT = 583103823/10000000
 HOME_LON = 266901429/10000000
 ANT_H = 3
-ARDUINO_PORT = 'COM10'
+ARDUINO_PORT = 'COM15'
 
 class Tracker:
     def __init__(self, lat, lon, antennaheight):
@@ -33,7 +35,7 @@ class Tracker:
     def verticaldirection(self, alt):
         h = self.antennaheight
         dist = self.dist_from_drone
-        alt = alt - dist*0.08
+        alt = alt - dist*0.00008
         angle = math.atan((int(alt)-h)/dist)
         angle_deg = angle * 180/math.pi
         return(angle_deg)
@@ -58,19 +60,20 @@ class Uav:
 
 uav = Uav()
 tracker = Tracker(HOME_LAT, HOME_LON, ANT_H)
-master = mavutil.mavlink_connection('udpin:127.0.0.1:14551')
+master = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
 arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
 geodesic = pyproj.Geod(ellps='WGS84')
-"""
-master.wait_heartbeat()
-master.mav.param_request_list_send(
-    master.target_system, master.target_component
-)
-"""
+
+if TESTMODE == False:
+    master.wait_heartbeat()
+    master.mav.param_request_list_send(
+        master.target_system, master.target_component
+    )
+    print("ok")
 
 def datafromtelemetry():
     while True:
-        time.sleep(2)
+        time.sleep(0.1)
         try:
             DataToSend = {}
             message = master.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
@@ -78,32 +81,46 @@ def datafromtelemetry():
             horis_dir = tracker.setdirdist(uav.lon, uav.lat)
             vert_dir = tracker.verticaldirection(uav.relative_alt)
             print(f"suund: {horis_dir} vert suund: {vert_dir} alt {uav.relative_alt}")
-            """
             #DataToSend = {"hor_dir" : horis_dir, "vert_dir" : vert_dir} Äkki saab seda kasutada, kaks rida veits jama
             DataToSend["hor_dir"] = horis_dir
             DataToSend["vert_dir"] = vert_dir
-            DataToSend = str(json.dumps(DataToSend))
+            DataToSend["initialbear"] = 180
             print(DataToSend)
+            send(DataToSend)
             #sendtoarduino(DataToSend)
-            """
         except Exception as error:
             print(error)
             sys.exit(0)
 
-def sendtoarduino(hor, vert, initialbear):
-    data = serialize_data(hor, vert, initialbear)
-    print(data)
-    arduino.write(data)
-    arduino.flush()
+"""
+def sendtoarduino(var, val):
+    arduino.write(bytes(f"{var}:{val}\n", 'utf-8'))
     data1 = arduino.readline().decode()
     print(f"rec: {data1}")
+"""
 
+data1 = {
+    "hor_dir": 202,
+    "vert_dir": 0,
+    "initialbear": 180
+}
+
+
+def send(data):
+    json_data = json.dumps(data)
+    # Send the JSON data over serial
+    arduino.write((json_data + "\n").encode())
+    print("Data sent:")
+    #data1 = arduino.readline().decode()
+    #print(f"rec: {data1}")
+
+    
+"""
 def serialize_data(hor_dir, vert_dir, initialbear):
-    data = struct.pack('fff', hor_dir, vert_dir, initialbear)
+    data = struct.pack('iii', hor_dir, vert_dir, initialbear)
     return data
-
-while True:
-    sendtoarduino(1.2, 2.0, 50.0)
-    time.sleep(0.2)
-#datafromtelemetry()
+"""
+#while True:
+#    send(data1)
+datafromtelemetry()
 #lat : 583103823, lon : 266901429
