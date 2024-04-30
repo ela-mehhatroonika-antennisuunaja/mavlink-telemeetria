@@ -12,20 +12,23 @@ TESTMODE = False
 HOME_LAT = 583103823/10000000
 HOME_LON = 266901429/10000000
 ANT_H = 3
+INITBEAR = 0
 ARDUINO_PORT = 'COM15'
 
 class Tracker:
-    def __init__(self, lat, lon, antennaheight):
+    def __init__(self, lat, lon, antennaheight, initbear):
         self.lat = lat
         self.lon = lon
         self.antennaheight = antennaheight
         self.elev = 0
+        self.initbear = initbear
+        self.geodesic = pyproj.Geod(ellps='WGS84')
 
         self.dist_from_drone = 0
         self.antennadirection = 0
 
     def setdirdist(self, long2, lat2):
-        fwd_azimuth,back_azimuth,distance = geodesic.inv(self.lon, self.lat, long2, lat2) #fwd_azimuth,back_azimuth,distance
+        fwd_azimuth,back_azimuth,distance = self.geodesic.inv(self.lon, self.lat, long2, lat2) #fwd_azimuth,back_azimuth,distance
         if fwd_azimuth < 0:
             fwd_azimuth = 360 + fwd_azimuth
         self.antennadirection = fwd_azimuth
@@ -39,6 +42,22 @@ class Tracker:
         angle = math.atan((int(alt)-h)/dist)
         angle_deg = angle * 180/math.pi
         return(angle_deg)
+    
+    def sendtotracker(self, uav):
+        datatosend = {}
+        horis_dir = self.setdirdist(uav.lon, uav.lat)
+        vert_dir = self.verticaldirection(uav.relative_alt)
+        datatosend["hor_dir"] = horis_dir
+        datatosend["vert_dir"] = vert_dir
+        datatosend["initialbear"] = self.initbear
+        json_data = json.dumps(datatosend)
+        arduino.write((json_data + "\n").encode())
+        print("Data sent")
+
+    def sendtotrackerTEST(self, message):
+        json_data = json.dumps(message)
+        arduino.write((json_data + "\n").encode())
+        print("Data sent")
 
 class Uav:
     def __init__(self):
@@ -59,68 +78,29 @@ class Uav:
         self.relative_alt = message.relative_alt/1000
 
 uav = Uav()
-tracker = Tracker(HOME_LAT, HOME_LON, ANT_H)
+tracker = Tracker(HOME_LAT, HOME_LON, ANT_H, INITBEAR)
 master = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
 arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
-geodesic = pyproj.Geod(ellps='WGS84')
 
-if TESTMODE == False:
+def main():
+    if TESTMODE == True:
+        data1 = {"hor_dir": 202, "vert_dir": 0, "initialbear": 180}
+        while True:
+            time.sleep(0.1)
+            tracker.sendtotrackerTEST(data1)
+    
     master.wait_heartbeat()
     master.mav.param_request_list_send(
         master.target_system, master.target_component
     )
-    print("ok")
 
-def datafromtelemetry():
     while True:
-        time.sleep(0.1)
+        #time.sleep(0.1)
         try:
-            DataToSend = {}
-            message = master.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-            uav.SetDataFromMessage(message)
-            horis_dir = tracker.setdirdist(uav.lon, uav.lat)
-            vert_dir = tracker.verticaldirection(uav.relative_alt)
-            print(f"suund: {horis_dir} vert suund: {vert_dir} alt {uav.relative_alt}")
-            #DataToSend = {"hor_dir" : horis_dir, "vert_dir" : vert_dir} Äkki saab seda kasutada, kaks rida veits jama
-            DataToSend["hor_dir"] = horis_dir
-            DataToSend["vert_dir"] = vert_dir
-            DataToSend["initialbear"] = 180
-            print(DataToSend)
-            send(DataToSend)
-            #sendtoarduino(DataToSend)
+            uav.SetDataFromMessage(master.recv_match(type='GLOBAL_POSITION_INT', blocking=True))
+            tracker.sendtotracker(uav)
         except Exception as error:
             print(error)
             sys.exit(0)
 
-"""
-def sendtoarduino(var, val):
-    arduino.write(bytes(f"{var}:{val}\n", 'utf-8'))
-    data1 = arduino.readline().decode()
-    print(f"rec: {data1}")
-"""
-
-data1 = {
-    "hor_dir": 202,
-    "vert_dir": 0,
-    "initialbear": 180
-}
-
-
-def send(data):
-    json_data = json.dumps(data)
-    # Send the JSON data over serial
-    arduino.write((json_data + "\n").encode())
-    print("Data sent:")
-    #data1 = arduino.readline().decode()
-    #print(f"rec: {data1}")
-
-    
-"""
-def serialize_data(hor_dir, vert_dir, initialbear):
-    data = struct.pack('iii', hor_dir, vert_dir, initialbear)
-    return data
-"""
-#while True:
-#    send(data1)
-datafromtelemetry()
-#lat : 583103823, lon : 266901429
+main()
