@@ -12,7 +12,7 @@ TESTMODE = False
 HOME_LAT = 583103823/10000000
 HOME_LON = 266901429/10000000
 ANT_H = 3
-INITBEAR = 0
+INITBEAR = -1
 ARDUINO_PORT = 'COM15'
 
 class Tracker:
@@ -98,7 +98,24 @@ def main():
         #time.sleep(0.1)
         try:
             uav.SetDataFromMessage(master.recv_match(type='GLOBAL_POSITION_INT', blocking=True))
+            print(tracker.antennadirection)
+            #corr = 101 - tracker.initbear + tracker.antennadirection
+            #print(corr)
             tracker.sendtotracker(uav)
+            """
+            corr = 0
+            corr = 101 - tracker.initbear + tracker.antennadirection
+            print(corr)
+            if (corr > 360):
+                corr = corr - 360
+            print(corr)
+            print(tracker.antennadirection-tracker.initbear)
+            if (corr > 202):
+                corr = 202
+
+            if (corr < 0):
+                corr = 1
+            """
         except Exception as error:
             print(error)
             sys.exit(0)
