@@ -24,9 +24,11 @@ def update_settings():
     antenna_longitudee = antenna_longitude.get()
     antenna_latitudee = antenna_latitude.get()
     antenna_heightt = antenna_height.get()
-    mavlink_portt = mavlink_port.get()
     mag_declinationn = mag_declination.get()
-    print(mavlink_portt)
+
+def set_mavproxy():
+  mavlink_portt = mavlink_port.get()
+  mavlink_ipp = mavlink_ip.get()
 
 settings_frame = tk.Frame(root)
 settings_frame.pack(padx=10, pady=10)

@@ -16,7 +16,7 @@ INITBEAR = -1
 ARDUINO_PORT = 'COM15'
 
 class Tracker:
-    def __init__(self, lat, lon, antennaheight, initbear):
+    def __init__(self, lat = 0, lon = 0, antennaheight = 0, initbear = 0):
         self.lat = lat
         self.lon = lon
         self.antennaheight = antennaheight
@@ -67,21 +67,23 @@ class Uav:
         self.lon_rad = 0
         self.alt = 0
         self.relative_alt = 0
+        #self.hdg = 0
         #self.message = "test"
     
     def SetDataFromMessage(self, message):
         #print(f"lon: {message.lon}, lat: {message.lat}, alt: {message.alt}, relalt: {message.relative_alt}")
         self.lon = int(message.lon)/10000000
         self.lat = int(message.lat)/10000000
+        #self.hdg = message.
         self.lon_rad = math.radians(self.lon)
         self.lat_rad = math.radians(self.lat)
         self.relative_alt = message.relative_alt/1000
-
+""" 
 uav = Uav()
 tracker = Tracker(HOME_LAT, HOME_LON, ANT_H, INITBEAR)
 master = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
 arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
-
+ """
 def main():
     if TESTMODE == True:
         data1 = {"hor_dir": 202, "vert_dir": 0, "initialbear": 180}
@@ -95,29 +97,17 @@ def main():
     )
 
     while True:
-        #time.sleep(0.1)
         try:
             uav.SetDataFromMessage(master.recv_match(type='GLOBAL_POSITION_INT', blocking=True))
             print(tracker.antennadirection)
-            #corr = 101 - tracker.initbear + tracker.antennadirection
-            #print(corr)
             tracker.sendtotracker(uav)
-            """
-            corr = 0
-            corr = 101 - tracker.initbear + tracker.antennadirection
-            print(corr)
-            if (corr > 360):
-                corr = corr - 360
-            print(corr)
-            print(tracker.antennadirection-tracker.initbear)
-            if (corr > 202):
-                corr = 202
-
-            if (corr < 0):
-                corr = 1
-            """
         except Exception as error:
             print(error)
             sys.exit(0)
 
-main()
+if __name__ == "__main__":
+    uav = Uav()
+    tracker = Tracker(HOME_LAT, HOME_LON, ANT_H, INITBEAR)
+    master = mavutil.mavlink_connection('udpin:127.0.0.1:14551')
+    arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
+    main()
