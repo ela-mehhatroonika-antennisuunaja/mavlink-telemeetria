@@ -9,8 +9,8 @@ import struct
 from pymavlink import mavutil
 
 TESTMODE = False
-HOME_LAT = 58.3103108
-HOME_LON = 26.6899999
+HOME_LAT = 58.310351
+HOME_LON = 26.693480
 ANT_H = -5
 INITBEAR = -1
 ARDUINO_PORT = 'COM15'

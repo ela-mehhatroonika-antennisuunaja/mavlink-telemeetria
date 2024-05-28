@@ -16,7 +16,7 @@ class DirectionalAntennaGUI:
         self.INITBEAR = -1
         self.ARDUINO_PORT = 'COM15'
         self.MAVLINKIP = "127.0.0.1"
-        self.MAVLINKPORT = 14550
+        self.MAVLINKPORT = 14551
 
         self.uav = main.Uav()
         self.tracker = main.Tracker()
