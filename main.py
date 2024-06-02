@@ -1,11 +1,8 @@
 import time
-import sys
-import asyncio
+import serial
 import math
 import pyproj
-import serial
 import json
-import struct
 import configparser
 from pymavlink import mavutil
 
@@ -20,8 +17,6 @@ SET_GPS_FROM_DRONE = bool(config['Antenna tracker data']['set_location_from_dron
 ANT_H = int(config['Antenna tracker data']['antenna_height'])
 INITBEAR = int(config['Antenna tracker data']['initial_true_course'])
 ARDUINO_PORT = str(config['Arduino']['arduino_port'])
-
-TESTMODE = False
 
 class Tracker:
     def __init__(self, lat = 0, lon = 0, antennaheight = 0, initbear = 0):
@@ -76,31 +71,21 @@ class Uav:
         self.lon_rad = 0
         self.alt = 0
         self.relative_alt = 0
-        #self.hdg = 0
-        #self.message = "test"
     
     def SetDataFromMessage(self, message):
-        #print(f"lon: {message.lon}, lat: {message.lat}, alt: {message.alt}, relalt: {message.relative_alt}")
         self.lon = int(message.lon)/10000000
         self.lat = int(message.lat)/10000000
-        #self.hdg = message.
         self.lon_rad = math.radians(self.lon)
         self.lat_rad = math.radians(self.lat)
         self.relative_alt = message.relative_alt/1000
 
 def main():
-    if TESTMODE == True:
-        data1 = {"hor_dir": 202, "vert_dir": 0, "initialbear": 180}
-        while True:
-            time.sleep(0.1)
-            tracker.sendtotrackerTEST(data1)
-
     print(f"Ootan mavlinki heartbeati {MAVLINK_IP}:{MAVLINK_PORT}")
     master.wait_heartbeat()
     master.mav.param_request_list_send(
         master.target_system, master.target_component
     )
-    print("Heartbeat from system (system %u component %u)" % (master.target_system, master.target_component))
+    print("Heartbeat olemas (süsteem %u komponent %u)" % (master.target_system, master.target_component))
 
     if SET_GPS_FROM_DRONE == True:
         input("PANE MÕS või MÕS-i GPS TÄPSELT ANTENNI TORNI KOHALE, seejärel vajuta enter.")
@@ -144,5 +129,5 @@ if __name__ == "__main__":
     uav = Uav()
     tracker = Tracker(HOME_LAT, HOME_LON, ANT_H, INITBEAR)
     master = mavutil.mavlink_connection(f'udpin:{MAVLINK_IP}:{MAVLINK_PORT}')
-    #tracker.arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
+    tracker.arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
     main()
