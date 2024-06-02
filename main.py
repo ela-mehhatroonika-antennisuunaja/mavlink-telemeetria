@@ -6,17 +6,20 @@ import pyproj
 import serial
 import json
 import struct
+import configparser
 from pymavlink import mavutil
 
-SET_GPS_FROM_DRONE = True
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-MAVLINK_IP = "127.0.0.1"
-MAVLINK_PORT = "14551"
-HOME_LAT = 58.310397
-HOME_LON = 26.692669
-ANT_H = 0
-INITBEAR = 17
-ARDUINO_PORT = 'COM15'
+MAVLINK_IP = str(config['Mavlink/Mavproxy']['mavlink_ip'])
+MAVLINK_PORT = str(config['Mavlink/Mavproxy']['mavlink_port'])
+HOME_LAT = float(config['Antenna tracker data']['home_latitude'])
+HOME_LON = float(config['Antenna tracker data']['home_longitude'])
+SET_GPS_FROM_DRONE = bool(config['Antenna tracker data']['set_location_from_drone'])
+ANT_H = int(config['Antenna tracker data']['antenna_height'])
+INITBEAR = int(config['Antenna tracker data']['initial_true_course'])
+ARDUINO_PORT = str(config['Arduino']['arduino_port'])
 
 TESTMODE = False
 
