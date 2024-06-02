@@ -112,7 +112,7 @@ def main():
                 master.target_component,  # Target component ID
                 mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,  # ID of command to send
                 0,  # Confirmation
-                mavutil.mavlink.GPS_RAW_INT,  # param1: Message ID to be streamed
+                mavutil.mavlink.GLOBAL_POSITION_INT,  # param1: Message ID to be streamed
                 500_000, # param2: Interval in microseconds
                 0,       # param3 (unused)
                 0,       # param4 (unused)
@@ -140,6 +140,6 @@ def main():
 if __name__ == "__main__":
     uav = Uav()
     tracker = Tracker(HOME_LAT, HOME_LON, ANT_H, INITBEAR)
-    master = mavutil.mavlink_connection('udpin:127.0.0.1:14551')
+    master = mavutil.mavlink_connection(f'udpin:{MAVLINK_IP}:{MAVLINK_PORT}')
     #tracker.arduino = serial.Serial(port=ARDUINO_PORT, baudrate=9600, timeout=.1) 
     main()
