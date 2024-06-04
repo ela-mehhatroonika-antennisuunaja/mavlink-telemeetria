@@ -2,7 +2,9 @@
 - Kontrolli, et arvutis oleks Python ja Mavproxy
 Installi `requirements.txt`. Avage cmd mavlink-telemeetria kaustas ning sisestage käsk
 
-```pip install -r requirements.txt```
+```
+pip install -r requirements.txt
+```
 
 
 - Aktiveeri _virtual environment_. Sisestage ```venv\Scripts\activate```
