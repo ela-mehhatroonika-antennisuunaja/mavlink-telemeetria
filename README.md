@@ -10,6 +10,7 @@ Aktiveeri _virtual environment_. Sisestage
 venv\Scripts\activate
 ```
 Kontrolli config.ini failis olevad parameetrid.
+
 Jooksuta `main.py` kasutades käsku
 ```
 python main.py
