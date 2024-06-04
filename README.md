@@ -15,10 +15,9 @@ Jooksuta `main.py` kasutades käsku
 ```
 python main.py
 ```
-Jooskuta command promptis
+Jooskuta command promptis allolev käsk, milles `x` asendada pordi numbriga, millesse raadio on ühendatud (vt Device Managerist).
 ```
 mavproxy --master=COMx --out 127.0.0.1:14550
 ```
-`x` asendada pordi numbriga, millesse raadio on ühendatud (vt Device Managerist).
 
 Kui MAVPROXY saab MAVLINKi ühenduse kätte, peaks antennisuunaja tööle hakkama.
